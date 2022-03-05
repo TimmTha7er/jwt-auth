@@ -10,21 +10,25 @@ class UserController {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
       })
-			
+
       return res.json(userData)
     } catch (error) {
-      console.error(error)
+      next(error)
     }
   }
 
   async login(req, res, next) {
     try {
-    } catch (error) {}
+    } catch (error) {
+      next(error)
+    }
   }
 
   async logout(req, res, next) {
     try {
-    } catch (error) {}
+    } catch (error) {
+      next(error)
+    }
   }
 
   async activate(req, res, next) {
@@ -35,19 +39,23 @@ class UserController {
 
       return res.redirect(process.env.CLIENT_URL)
     } catch (error) {
-      console.error(error)
+      next(error)
     }
   }
 
   async refresh(req, res, next) {
     try {
-    } catch (error) {}
+    } catch (error) {
+      next(error)
+    }
   }
 
   async getUsers(req, res, next) {
     try {
       res.json(['h1llo', 'from', 'node js'])
-    } catch (error) {}
+    } catch (error) {
+      next(error)
+    }
   }
 }
 
