@@ -29,7 +29,14 @@ class UserController {
 
   async activate(req, res, next) {
     try {
-    } catch (error) {}
+      const activationId = req.params.id
+
+      await userService.activate(activationId)
+
+      return res.redirect(process.env.CLIENT_URL)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   async refresh(req, res, next) {
