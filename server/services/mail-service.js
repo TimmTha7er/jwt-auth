@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer')
-const UserModel = require('../models/user-model')
 
 class MailService {
   constructor() {
