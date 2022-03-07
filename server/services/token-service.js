@@ -17,6 +17,26 @@ class TokenService {
     }
   }
 
+  validateAccessToken(token) {
+    try {
+      const userData = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+
+      return userData
+    } catch (error) {
+      return null
+    }
+  }
+
+  validateRefreshToken(token) {
+    try {
+      const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
+
+      return userData
+    } catch (error) {
+      return null
+    }
+  }
+
   // !!!
   // При таком подходе в БД по одному пользователю всегда находится один токен
   // и при попытке зайти на аккаунт с другого устройства, с того устровйства
@@ -42,6 +62,12 @@ class TokenService {
 
   async removeToken(refreshToken) {
     const tokenData = await TokenModel.deleteOne({ refreshToken })
+
+    return tokenData
+  }
+
+  async findToken(refreshToken) {
+    const tokenData = await TokenModel.findOne({ refreshToken })
 
     return tokenData
   }
