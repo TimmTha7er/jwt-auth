@@ -4,7 +4,6 @@ const uuid = require('uuid')
 
 const mailService = require('./mail-service')
 const tokenService = require('./token-service')
-const UserDto = require('../dtos/user.dto')
 const ApiError = require('../exceptions/api-error')
 
 class UserService {
@@ -25,11 +24,11 @@ class UserService {
       password: hashPassword,
       activationId,
     })
-    const userData = await this._addTokens(user)
+    const authUser = await tokenService.addTokens(user)
 
     await mailService.sendActivationMail(email, activationLink)
 
-    return userData
+    return authUser
   }
 
   activate = async (activationId) => {
@@ -56,9 +55,9 @@ class UserService {
       throw ApiError.BadRequest('Неверный пароль')
     }
 
-    const userData = await this._addTokens(user)
+    const authUser = await tokenService.addTokens(user)
 
-    return userData
+    return authUser
   }
 
   logout = async (refreshToken) => {
@@ -72,7 +71,7 @@ class UserService {
       throw ApiError.UnauthorizedError()
     }
 
-    let userData = tokenService.validateRefreshToken(refreshToken)
+    const userData = tokenService.validateRefreshToken(refreshToken)
     const tokenFromDb = await tokenService.findToken(refreshToken)
 
     if (!userData || !tokenFromDb) {
@@ -80,27 +79,15 @@ class UserService {
     }
 
     const user = await UserModel.findById(userData.id)
-    userData = await this._addTokens(user)
+    const authUser = await tokenService.addTokens(user)
 
-    return userData
+    return authUser
   }
 
   getAllUsers = async () => {
     const users = await UserModel.find()
 
     return users
-  }
-
-  _addTokens = async (user) => {
-    const userDto = new UserDto(user)
-    const tokens = tokenService.generateTokens({ ...userDto })
-
-    await tokenService.saveToken(userDto.id, tokens.refreshToken)
-
-    return {
-      ...tokens,
-      user: userDto,
-    }
   }
 }
 

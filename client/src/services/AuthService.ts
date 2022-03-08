@@ -2,7 +2,7 @@ import $api from '../http'
 import { AxiosResponse } from 'axios'
 import { AuthResponse } from '../models/AuthResponse'
 
-export default class AuthService {
+class AuthService {
   static async login(
     email: string,
     password: string
@@ -21,3 +21,5 @@ export default class AuthService {
     return $api.post('/logout')
   }
 }
+
+export default AuthService

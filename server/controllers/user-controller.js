@@ -1,11 +1,10 @@
 const { validationResult } = require('express-validator')
 
 const userService = require('../services/user-service')
+const tokenService = require('../services/token-service')
 const ApiError = require('../exceptions/api-error')
 
 class UserController {
-  MILLISECONDS_IN_A_MONTH = 30 * 24 * 60 * 60 * 1000
-
   registration = async (req, res, next) => {
     try {
       const errors = validationResult(req)
@@ -15,11 +14,11 @@ class UserController {
       }
 
       const { email, password } = req.body
-      const userData = await userService.registration(email, password)
+      const user = await userService.registration(email, password)
 
-      this._setCookie(res, userData.refreshToken)
+      tokenService.setCookie(res, user.refreshToken)
 
-      return res.json(userData)
+      return res.json(user)
     } catch (error) {
       next(error)
     }
@@ -28,11 +27,11 @@ class UserController {
   login = async (req, res, next) => {
     try {
       const { email, password } = req.body
-      const userData = await userService.login(email, password)
+      const user = await userService.login(email, password)
 
-      this._setCookie(res, userData.refreshToken)
+      tokenService.setCookie(res, user.refreshToken)
 
-      return res.json(userData)
+      return res.json(user)
     } catch (error) {
       next(error)
     }
@@ -66,11 +65,11 @@ class UserController {
   refresh = async (req, res, next) => {
     try {
       const { refreshToken } = req.cookies
-      const userData = await userService.refresh(refreshToken)
+      const user = await userService.refresh(refreshToken)
 
-      this._setCookie(res, userData.refreshToken)
+      tokenService.setCookie(res, user.refreshToken)
 
-      return res.json(userData)
+      return res.json(user)
     } catch (error) {
       next(error)
     }
@@ -84,13 +83,6 @@ class UserController {
     } catch (error) {
       next(error)
     }
-  }
-
-  _setCookie = (res, refreshToken) => {
-    res.cookie('refreshToken', refreshToken, {
-      maxAge: this.MILLISECONDS_IN_A_MONTH,
-      httpOnly: true,
-    })
   }
 }
 
