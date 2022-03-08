@@ -72,15 +72,15 @@ class UserService {
       throw ApiError.UnauthorizedError()
     }
 
-    const jwtPayload = tokenService.validateRefreshToken(refreshToken)
+    let userData = tokenService.validateRefreshToken(refreshToken)
     const tokenFromDb = await tokenService.findToken(refreshToken)
 
-    if (!jwtPayload || !tokenFromDb) {
+    if (!userData || !tokenFromDb) {
       throw ApiError.UnauthorizedError()
     }
 
-    const user = await UserModel.findById(jwtPayload.id)
-    const userData = await this._addTokens(user)
+    const user = await UserModel.findById(userData.id)
+    userData = await this._addTokens(user)
 
     return userData
   }
