@@ -1,23 +1,19 @@
 const jwt = require('jsonwebtoken')
 
-const UserDto = require('../dtos/user.dto')
 const TokenModel = require('../models/token-model')
 
 class TokenService {
   MILLISECONDS_IN_A_MONTH = 30 * 24 * 60 * 60 * 1000
 
-  addTokens = async (user) => {
-    const userDto = new UserDto(user)
-    const tokens = this.generateTokens({ ...userDto })
-
-    await this.saveToken(userDto.id, tokens.refreshToken)
+  addTokens = (user) => {
+    const tokens = this.generateTokens({ ...user })
 
     return {
       ...tokens,
-      user: userDto,
+      user,
     }
   }
-  
+
   generateTokens = (payload) => {
     const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
       expiresIn: process.env.JWT_ACCESS_TOKEN_LIFETIME,

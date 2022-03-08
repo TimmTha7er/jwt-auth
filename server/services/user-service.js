@@ -4,6 +4,7 @@ const uuid = require('uuid')
 
 const mailService = require('./mail-service')
 const tokenService = require('./token-service')
+const UserDto = require('../dtos/user.dto')
 const ApiError = require('../exceptions/api-error')
 
 class UserService {
@@ -24,7 +25,7 @@ class UserService {
       password: hashPassword,
       activationId,
     })
-    const authUser = await tokenService.addTokens(user)
+    const authUser = await this._authorizeUser(user)
 
     await mailService.sendActivationMail(email, activationLink)
 
@@ -55,7 +56,7 @@ class UserService {
       throw ApiError.BadRequest('Неверный пароль')
     }
 
-    const authUser = await tokenService.addTokens(user)
+    const authUser = await this._authorizeUser(user)
 
     return authUser
   }
@@ -79,7 +80,7 @@ class UserService {
     }
 
     const user = await UserModel.findById(userData.id)
-    const authUser = await tokenService.addTokens(user)
+    const authUser = await this._authorizeUser(user)
 
     return authUser
   }
@@ -88,6 +89,15 @@ class UserService {
     const users = await UserModel.find()
 
     return users
+  }
+
+  _authorizeUser = async (user) => {
+    const userDto = new UserDto(user)
+    const authUser = tokenService.addTokens(userDto)
+
+    await tokenService.saveToken(authUser.user.id, authUser.refreshToken)
+
+    return authUser
   }
 }
 
