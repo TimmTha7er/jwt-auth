@@ -8,7 +8,7 @@ const UserDto = require('../dtos/user.dto')
 const ApiError = require('../exceptions/api-error')
 
 class UserService {
-  async registration(email, password) {
+  registration = async (email, password) => {
     const candidate = await UserModel.findOne({ email })
 
     if (candidate) {
@@ -25,19 +25,14 @@ class UserService {
       password: hashPassword,
       activationId,
     })
-    const userDto = new UserDto(user)
-    const tokens = tokenService.generateTokens({ ...userDto })
+    const userData = await this._addTokens(user)
 
-    await tokenService.saveToken(userDto.id, tokens.refreshToken)
     await mailService.sendActivationMail(email, activationLink)
 
-    return {
-      ...tokens,
-      user: userDto,
-    }
+    return userData
   }
 
-  async activate(activationId) {
+  activate = async (activationId) => {
     const user = await UserModel.findOne({ activationId })
 
     if (!user) {
@@ -48,7 +43,7 @@ class UserService {
     await user.save()
   }
 
-  async login(email, password) {
+  login = async (email, password) => {
     const user = await UserModel.findOne({ email })
 
     if (!user) {
@@ -61,36 +56,42 @@ class UserService {
       throw ApiError.BadRequest('Неверный пароль')
     }
 
-    const userDto = new UserDto(user)
-    const tokens = tokenService.generateTokens({ ...userDto })
+    const userData = await this._addTokens(user)
 
-    await tokenService.saveToken(userDto.id, tokens.refreshToken)
-
-    return {
-      ...tokens,
-      user: userDto,
-    }
+    return userData
   }
 
-  async logout(refreshToken) {
+  logout = async (refreshToken) => {
     const token = await tokenService.removeToken(refreshToken)
 
     return token
   }
 
-  async refresh(refreshToken) {
+  refresh = async (refreshToken) => {
     if (!refreshToken) {
       throw ApiError.UnauthorizedError()
     }
 
-    const userData = tokenService.validateRefreshToken(refreshToken)
+    const jwtPayload = tokenService.validateRefreshToken(refreshToken)
     const tokenFromDb = await tokenService.findToken(refreshToken)
 
-    if (!userData || !tokenFromDb) {
+    if (!jwtPayload || !tokenFromDb) {
       throw ApiError.UnauthorizedError()
     }
 
-    const user = await UserModel.findById(userData.id)
+    const user = await UserModel.findById(jwtPayload.id)
+    const userData = await this._addTokens(user)
+
+    return userData
+  }
+
+  getAllUsers = async () => {
+    const users = await UserModel.find()
+
+    return users
+  }
+
+  _addTokens = async (user) => {
     const userDto = new UserDto(user)
     const tokens = tokenService.generateTokens({ ...userDto })
 
@@ -100,12 +101,6 @@ class UserService {
       ...tokens,
       user: userDto,
     }
-  }
-
-  async getAllUsers() {
-    const users = await UserModel.find()
-
-    return users
   }
 }
 

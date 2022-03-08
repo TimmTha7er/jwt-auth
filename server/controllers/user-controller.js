@@ -4,7 +4,9 @@ const userService = require('../services/user-service')
 const ApiError = require('../exceptions/api-error')
 
 class UserController {
-  async registration(req, res, next) {
+  MILLISECONDS_IN_A_MONTH = 30 * 24 * 60 * 60 * 1000
+
+  registration = async (req, res, next) => {
     try {
       const errors = validationResult(req)
 
@@ -15,10 +17,7 @@ class UserController {
       const { email, password } = req.body
       const userData = await userService.registration(email, password)
 
-      res.cookie('refreshToken', userData.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-      })
+      this._setCookie(res, userData.refreshToken)
 
       return res.json(userData)
     } catch (error) {
@@ -26,15 +25,12 @@ class UserController {
     }
   }
 
-  async login(req, res, next) {
+  login = async (req, res, next) => {
     try {
       const { email, password } = req.body
       const userData = await userService.login(email, password)
 
-      res.cookie('refreshToken', userData.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-      })
+      this._setCookie(res, userData.refreshToken)
 
       return res.json(userData)
     } catch (error) {
@@ -42,7 +38,7 @@ class UserController {
     }
   }
 
-  async logout(req, res, next) {
+  logout = async (req, res, next) => {
     try {
       const { refreshToken } = req.cookies
       const token = await userService.logout(refreshToken)
@@ -55,7 +51,7 @@ class UserController {
     }
   }
 
-  async activate(req, res, next) {
+  activate = async (req, res, next) => {
     try {
       const activationId = req.params.id
 
@@ -67,15 +63,12 @@ class UserController {
     }
   }
 
-  async refresh(req, res, next) {
+  refresh = async (req, res, next) => {
     try {
       const { refreshToken } = req.cookies
       const userData = await userService.refresh(refreshToken)
 
-      res.cookie('refreshToken', userData.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-      })
+      this._setCookie(res, userData.refreshToken)
 
       return res.json(userData)
     } catch (error) {
@@ -83,7 +76,7 @@ class UserController {
     }
   }
 
-  async getUsers(req, res, next) {
+  getUsers = async (req, res, next) => {
     try {
       const users = await userService.getAllUsers()
 
@@ -91,6 +84,13 @@ class UserController {
     } catch (error) {
       next(error)
     }
+  }
+
+  _setCookie = (res, refreshToken) => {
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: this.MILLISECONDS_IN_A_MONTH,
+      httpOnly: true,
+    })
   }
 }
 

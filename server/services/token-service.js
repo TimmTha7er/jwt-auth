@@ -3,12 +3,12 @@ const jwt = require('jsonwebtoken')
 const TokenModel = require('../models/token-model')
 
 class TokenService {
-  generateTokens(payload) {
+  generateTokens = (payload) => {
     const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: '15m',
+      expiresIn: process.env.JWT_ACCESS_TOKEN_LIFETIME,
     })
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: '30m',
+      expiresIn: process.env.JWT_REFRESH_TOKEN_LIFETIME,
     })
 
     return {
@@ -17,7 +17,7 @@ class TokenService {
     }
   }
 
-  validateAccessToken(token) {
+  validateAccessToken = (token) => {
     try {
       const userData = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
 
@@ -27,7 +27,7 @@ class TokenService {
     }
   }
 
-  validateRefreshToken(token) {
+  validateRefreshToken = (token) => {
     try {
       const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
 
@@ -46,7 +46,7 @@ class TokenService {
   // Можно сохранять по несколько токенов на одного пользователя, но нужно
   // продумать удаление умерших токенов из БД, чтобы БД не превратилась в мусорку
   // !!!
-  async saveToken(userId, refreshToken) {
+  saveToken = async (userId, refreshToken) => {
     const tokenData = await TokenModel.findOne({ user: userId })
 
     if (tokenData) {
@@ -60,13 +60,13 @@ class TokenService {
     return token
   }
 
-  async removeToken(refreshToken) {
+  removeToken = async (refreshToken) => {
     const tokenData = await TokenModel.deleteOne({ refreshToken })
 
     return tokenData
   }
 
-  async findToken(refreshToken) {
+  findToken = async (refreshToken) => {
     const tokenData = await TokenModel.findOne({ refreshToken })
 
     return tokenData
